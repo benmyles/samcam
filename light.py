@@ -1,15 +1,8 @@
-from dotenv import load_dotenv
-
 from pywizlight import wizlight, PilotBuilder
 
 import asyncio
-import os
 
-load_dotenv()
-
-LIGHT_IP = os.getenv('LIGHT_IP')
-LIGHT_PORT = os.getenv('LIGHT_PORT')
-SKIP_LIGHT = os.getenv('SKIP_LIGHT')
+from env import LIGHT_IP, LIGHT_PORT, SKIP_LIGHT
 
 async def async_turn_on_light():
     if SKIP_LIGHT == 'true' or SKIP_LIGHT == '1':

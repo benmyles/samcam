@@ -1,33 +1,45 @@
-from dotenv import load_dotenv
-
 from google import genai
-from google.genai.client import os
+import os
 
-from image_utils import get_random_image
 from analysis import analyzeImage
 from light import sync_turn_on_light
 
-load_dotenv()
-
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+from env import GEMINI_API_KEY, is_debug
+from cam import setup_camera, take_photo
 
 def main():
-    sync_turn_on_light()
+    # Get the directory where the script is located
+    script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    client = genai.Client(api_key=GEMINI_API_KEY)
+    # Create tmp directory relative to the script location
+    tmp_dir = os.path.join(script_dir, ".tmp")
+    os.makedirs(tmp_dir, exist_ok=True)
 
-    filename, image_data = get_random_image()
-    if image_data is None:
-        print("No JPG images found in the mocks directory")
-        return
+    cap = setup_camera()
+    try:
+        client = genai.Client(api_key=GEMINI_API_KEY)
 
-    print(f"Analyzing image: {filename}")
+        filename, image_data = take_photo(cap)
 
-    analysis = analyzeImage(client, image_data)
-    print(analysis)
+        if is_debug:
+            # Save image to ./tmp relative to script location for debugging
+            debug_filename = os.path.basename(filename)
+            debug_path = os.path.join(tmp_dir, debug_filename)
+            with open(debug_path, "wb") as f:
+                f.write(image_data)
+            print(f"Debug image saved to: {debug_path}")
 
+        print(f"Analyzing image: {filename}")
+        analysis = analyzeImage(client, image_data)
+        print(analysis)
 
+        sync_turn_on_light()
+    finally:
+        if cap is not None:
+            cap.release()
 
+        import cv2
+        cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     main()

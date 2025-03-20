@@ -80,8 +80,6 @@ class SamCam:
                 analysis.probability_is_panting < 0.5):
                 return False
 
-            # Consider standing, sitting, or panting as concerning behaviors
-
         # If we got here, all recent analyses show concerning behavior
         return True
 
